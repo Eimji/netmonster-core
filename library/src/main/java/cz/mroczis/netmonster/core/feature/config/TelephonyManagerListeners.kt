@@ -1,5 +1,6 @@
 package cz.mroczis.netmonster.core.feature.config
 
+import android.os.Binder
 import android.os.Build
 import android.telephony.*
 import android.util.Log
@@ -54,7 +55,12 @@ internal fun <T> TelephonyManager.requestPhoneStateUpdate(
         // original thread
         val localListener = getListener { data ->
             // Stop listening
-            listen(this, PhoneStateListener.LISTEN_NONE)
+            val identity = Binder.clearCallingIdentity()
+            try {
+                listen(this, PhoneStateListener.LISTEN_NONE)
+            } finally {
+                Binder.restoreCallingIdentity(identity)
+            }
             // Rewrite reference to data and unblock original thread
             result = data
             asyncLock.countDown()
@@ -62,7 +68,12 @@ internal fun <T> TelephonyManager.requestPhoneStateUpdate(
 
 
         listener = localListener
-        listen(localListener, localListener.event)
+        val identity = Binder.clearCallingIdentity()
+        try {
+            listen(localListener, localListener.event)
+        } finally {
+            Binder.restoreCallingIdentity(identity)
+        }
     }
 
     // And we also must block original thread
@@ -79,7 +90,12 @@ internal fun <T> TelephonyManager.requestPhoneStateUpdate(
     listener?.let {
         // Same thread is required for unregistering
         Threads.phoneStateListener.post {
-            listen(it, PhoneStateListener.LISTEN_NONE)
+            val identity = Binder.clearCallingIdentity()
+            try {
+                listen(it, PhoneStateListener.LISTEN_NONE)
+            } finally {
+                Binder.restoreCallingIdentity(identity)
+            }
         }
     }
 
