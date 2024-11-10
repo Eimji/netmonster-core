@@ -53,6 +53,7 @@ internal fun <T> TelephonyManager.requestPhoneStateUpdate(
         val identity = Binder.clearCallingIdentity()
         try {
             listen(psl, ev)
+        } catch (e: SecurityException) {
         } finally {
             Binder.restoreCallingIdentity(identity)
         }
@@ -69,7 +70,6 @@ internal fun <T> TelephonyManager.requestPhoneStateUpdate(
             result = data
             asyncLock.countDown()
         }
-
 
         listener = localListener
         secureListen(localListener, localListener.event)
